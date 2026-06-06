@@ -1,0 +1,26 @@
+{
+  "name": "SegTrab DT 22:8",
+  "short_name": "SegTrab",
+  "description": "Sistema de Gestão de Segurança do Trabalho",
+  "start_url": "/SegTrab/",
+  "scope": "/SegTrab/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a4f2e",
+  "theme_color": "#1a4f2e",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
