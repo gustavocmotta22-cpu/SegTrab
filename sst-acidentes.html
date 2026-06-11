@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>SST Acidentes -- SegTrab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g900:#0A3D1F;--g800:#0E5E2D;--g700:#157A3A;--g600:#1E9449;
+  --g100:#ECFDF3;--g50:#F0FAF4;
+  --bg:#F7F8FA;--card:#FFFFFF;--border:#E8ECE9;
+  --text:#1C1C1C;--muted:#6B7280;
+  --red:#B42318;--red-bg:#FDECEC;--red-bord:rgba(180,35,24,.2);
+  --yellow:#B7791F;--yellow-bg:#FFF8E6;--yellow-bord:#F0C070;
+  --blue:#1D4ED8;--blue-bg:#EFF6FF;
+  --sh-xs:0 1px 3px rgba(0,0,0,.07);
+  --sh-grn:0 8px 24px -6px rgba(21,122,58,.42);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);display:flex;justify-content:center}
+#app{width:100%;max-width:430px;min-height:100%;background:var(--bg);position:relative}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.screen{display:none;flex-direction:column;min-height:100vh}
+.screen.show{display:flex;animation:fadeIn .2s ease}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.header{display:flex;align-items:center;gap:10px;padding:14px 16px;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;box-shadow:var(--sh-xs)}
+.header h2{font-size:17px;font-weight:700;flex:1}
+.back-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:11px;border:1px solid var(--border);background:#fff;cursor:pointer;flex-shrink:0}
+.back-btn svg{width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+input,select,textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:13px;font-size:14px;font-family:'Outfit',sans-serif;background:#fff;color:var(--text);outline:none;-webkit-appearance:none;appearance:none;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--g700);box-shadow:0 0 0 3px rgba(21,122,58,.1)}
+textarea{resize:vertical;min-height:76px}
+label{display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:var(--text)}
+.field{margin-bottom:13px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px}
+.btn{display:block;width:100%;padding:14px;border-radius:14px;border:none;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-align:center;transition:opacity .15s,transform .1s}
+.btn-green{background:linear-gradient(135deg,var(--g700),var(--g800));color:#fff;box-shadow:var(--sh-grn)}
+.btn-outline{background:transparent;border:1.5px solid var(--g700);color:var(--g700)}
+.btn-ghost{background:var(--g100);color:var(--g800);border:1px solid rgba(21,122,58,.2)}
+.btn:active{opacity:.85;transform:scale(.98)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-ok{background:var(--g100);color:var(--g800);border:1px solid rgba(21,122,58,.25)}
+.badge-warn{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-bord)}
+.badge-err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bord)}
+.badge-blue{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(29,78,216,.2)}
+.alert{padding:10px 13px;border-radius:12px;font-size:12px;line-height:1.5;display:flex;gap:8px;margin-bottom:12px}
+.alert-warn{background:var(--yellow-bg);border:1px solid var(--yellow-bord);color:var(--yellow)}
+.alert-err{background:var(--red-bg);border:1px solid var(--red-bord);color:var(--red)}
+.alert-info{background:var(--blue-bg);border:1px solid rgba(29,78,216,.2);color:var(--blue)}
+.drop-zone{border:2px dashed var(--border);border-radius:16px;padding:1.4rem;text-align:center;cursor:pointer;background:#fff;transition:.2s;margin-bottom:12px}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--g700);background:var(--g50)}
+.drop-zone.filled{border-style:solid;border-color:rgba(21,122,58,.4);background:var(--g50)}
+.drop-zone input{display:none}
+.dz-icon{font-size:22px;margin-bottom:5px}
+.dz-t1{font-size:13px;font-weight:600;margin-bottom:2px}
+.dz-t2{font-size:11px;color:var(--muted)}
+.file-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.fchip{display:flex;align-items:center;gap:3px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:3px 8px;font-size:11px;color:var(--muted)}
+.fchip button{background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;padding:0;margin-left:2px;line-height:1}
+.progress-wrap{text-align:center;padding:1.5rem}
+.spinner{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--g700);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px}
+.progress-txt{font-size:12px;color:var(--muted)}
+.sec-card{background:#fff;border:1px solid var(--border);border-radius:16px;margin-bottom:10px;overflow:hidden}
+.sec-head{padding:8px 13px;background:var(--g50);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
+.sec-num{width:19px;height:19px;background:var(--g700);color:#fff;border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-title{font-size:11px;font-weight:700;color:var(--g800);text-transform:uppercase;letter-spacing:.06em}
+.frr{display:grid;grid-template-columns:145px 1fr 65px;border-bottom:1px solid var(--border)}
+.frr:last-child{border-bottom:none}
+.frl{padding:7px 11px;font-size:11px;color:var(--muted);border-right:1px solid var(--border);display:flex;align-items:center}
+.frv{padding:7px 11px;font-size:11px;font-weight:600;border-right:1px solid var(--border);display:flex;align-items:flex-start;word-break:break-word}
+.frv-ok{color:var(--g700)}
+.frv-warn{color:var(--yellow);font-weight:400;font-style:italic}
+.frv-empty{color:#ccc;font-style:italic;font-weight:400}
+.frs{padding:7px 5px;display:flex;align-items:center;justify-content:center}
+.sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:13px}
+.sum-card{background:#fff;border:1px solid var(--border);border-radius:13px;padding:.8rem;text-align:center}
+.sum-n{font-size:20px;font-weight:800;margin-bottom:1px}
+.sum-l{font-size:10px;color:var(--muted)}
+.sum-ok .sum-n{color:var(--g700)}
+.sum-warn .sum-n{color:var(--yellow)}
+.sum-err .sum-n{color:var(--red)}
+.comp-box{padding:.8rem;background:var(--g50);border-top:1px solid var(--border)}
+.comp-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.comp-text{background:#fff;border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text);line-height:1.7;white-space:pre-wrap;max-height:180px;overflow-y:auto}
+.btn-copy{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--muted);cursor:pointer;margin-top:6px;display:inline-flex;align-items:center;gap:4px;font-family:'Outfit',sans-serif}
+.tabs{display:flex;background:#fff;border-bottom:1px solid var(--border)}
+.tab{flex:1;padding:11px 6px;text-align:center;font-size:12px;font-weight:600;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;font-family:'Outfit',sans-serif;white-space:nowrap;transition:.15s}
+.tab.active{color:var(--g700);border-bottom-color:var(--g700)}
+.home-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:box-shadow .15s,transform .1s;box-shadow:var(--sh-xs);margin-bottom:11px}
+.home-card:active{transform:scale(.98)}
+.home-ico{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.home-ico-red{background:var(--red-bg)}
+.home-ico-green{background:var(--g100)}
+.home-card-title{font-size:14px;font-weight:700;margin-bottom:2px}
+.home-card-sub{font-size:11px;color:var(--muted);line-height:1.4}
+.inv-sec{background:#fff;border:1px solid var(--border);border-radius:15px;margin-bottom:10px;overflow:hidden}
+.inv-sec-head{padding:10px 13px;background:var(--g50);border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:8px;cursor:pointer}
+.inv-sec-title{font-size:12px;font-weight:700;color:var(--g800);text-transform:uppercase;letter-spacing:.04em}
+.inv-sec-body{padding:13px;display:none}
+.inv-sec-body.open{display:block}
+.chevron{transition:transform .2s;flex-shrink:0;margin-top:2px}
+.chevron.open{transform:rotate(180deg)}
+.iso-tag{display:inline-flex;padding:2px 7px;background:var(--blue-bg);color:var(--blue);border-radius:5px;font-size:10px;font-weight:700;border:1px solid rgba(29,78,216,.15);margin-top:3px}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:#1C1C1C;color:#fff;padding:9px 18px;border-radius:24px;font-size:12px;font-weight:600;opacity:0;transition:all .25s;pointer-events:none;z-index:999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:none;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;padding:20px 20px 32px;box-shadow:0 -8px 32px rgba(0,0,0,.12)}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="toast"></div>
+
+<!-- HOME -->
+<div id="s-home" class="screen show">
+  <div class="header">
+    <button class="back-btn" id="btn-back-home">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <h2>Gestão de Acidentes</h2>
+  </div>
+  <div class="scroll" style="padding:16px">
+    <div style="background:linear-gradient(135deg,var(--g700),var(--g800));border-radius:18px;padding:16px;margin-bottom:18px;color:#fff">
+      <div style="font-size:10px;font-weight:700;opacity:.65;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px">SegTrab · SST</div>
+      <div style="font-size:17px;font-weight:800;margin-bottom:5px">Acidentes de Trabalho</div>
+      <div style="font-size:12px;opacity:.75;line-height:1.5">Envie os documentos -- a IA analisa e preenche automaticamente a CAT e a investigação ISO 45001.</div>
+    </div>
+    <div class="home-card" id="btn-open-cat">
+      <div class="home-ico home-ico-red"></div>
+      <div style="flex:1">
+        <div class="home-card-title">Analisador de CAT</div>
+        <div class="home-card-sub">Preenche o S-2210 automaticamente a partir dos documentos</div>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="home-card" id="btn-open-inv">
+      <div class="home-ico home-ico-green"></div>
+      <div style="flex:1">
+        <div class="home-card-title">Investigação ISO 45001</div>
+        <div class="home-card-sub">Relatório completo com causa raiz e plano de ação corretiva</div>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="alert alert-warn">
+      <span>[Relogio]</span>
+      <span><strong>Prazo legal:</strong> CAT no 1º dia útil após o acidente (Lei 8.213/91). Investigação em até 72h (ISO 45001).</span>
+    </div>
+  </div>
+</div>
+
+<!-- CAT -->
+<div id="s-cat" class="screen">
+  <div class="header">
+    <button class="back-btn" id="btn-back-cat">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <h2>Analisador de CAT</h2>
+    <span class="badge badge-blue">S-2210</span>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="cat-tab-upload" onclick="catTab('upload')"> Documentos</button>
+    <button class="tab" id="cat-tab-result" onclick="catTab('result')" style="display:none">&#x2705; Resultado</button>
+  </div>
+  <div id="cat-pane-upload" class="scroll" style="padding:16px">
+    <div class="alert alert-info"><span>&#x2139;&#xFE0F;</span><span>Envie atestado, espelho de ponto, escala e fotos. A IA lê tudo e preenche o formulário.</span></div>
+    <div class="drop-zone" id="cat-drop">
+      <div class="dz-icon"></div>
+      <div class="dz-t1">Toque para enviar documentos</div>
+      <div class="dz-t2">PDF, JPG, PNG -- atestado, ponto, escala, fotos</div>
+      <input type="file" id="cat-fi" multiple accept=".pdf,.jpg,.jpeg,.png">
+    </div>
+    <div class="file-chips" id="cat-chips"></div>
+    <div id="cat-progress" style="display:none"><div class="progress-wrap"><div class="spinner"></div><div class="progress-txt" id="cat-prog-txt">Lendo os documentos...</div></div></div>
+    <div id="cat-btns">
+      <button class="btn btn-green" id="cat-btn-ai" disabled style="margin-bottom:10px"> Analisar com IA e preencher CAT</button>
+      <button class="btn btn-ghost" id="cat-btn-manual">&#x270F;&#xFE0F; Preencher manualmente</button>
+    </div>
+  </div>
+  <div id="cat-pane-result" class="scroll" style="padding:16px;display:none">
+    <div id="cat-result-content"></div>
+    <button class="btn btn-green" id="cat-btn-pdf" style="margin-top:10px;margin-bottom:8px">&#x1F4E5; Exportar rascunho PDF</button>
+    <button class="btn btn-outline" id="cat-btn-nova" style="margin-bottom:6px">&#x21A9; Nova análise</button>
+  </div>
+</div>
+
+<!-- CAT FORM MANUAL -->
+<div id="s-cat-form" class="screen">
+  <div class="header">
+    <button class="back-btn" id="btn-back-catform">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <h2>Preencher CAT</h2>
+  </div>
+  <div class="scroll" style="padding:16px">
+    <div id="cat-form-content"></div>
+    <button class="btn btn-green" id="cat-btn-gerar-doc" style="margin-bottom:10px"> Gerar documento para SOC</button>
+    <button class="btn btn-ghost" id="cat-btn-cancelar">Cancelar</button>
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+<!-- INV -->
+<div id="s-inv" class="screen">
+  <div class="header">
+    <button class="back-btn" id="btn-back-inv">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <h2>Investigação ISO 45001</h2>
+    <span class="badge badge-blue">ISO</span>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="inv-tab-upload" onclick="invTab('upload')"> Documentos</button>
+    <button class="tab" id="inv-tab-form" onclick="invTab('form')"> Formulário</button>
+    <button class="tab" id="inv-tab-rel" onclick="invTab('rel')" style="display:none"> Relatório</button>
+  </div>
+  <div id="inv-pane-upload" class="scroll" style="padding:16px">
+    <div class="alert alert-info"><span>&#x2139;&#xFE0F;</span><span>Envie os documentos do acidente. A IA preenche o formulário ISO 45001 automaticamente.</span></div>
+    <div class="drop-zone" id="inv-drop">
+      <div class="dz-icon"></div>
+      <div class="dz-t1">Envie os documentos do acidente</div>
+      <div class="dz-t2">Atestado, ponto, escala, fotos, declarações -- PDF, JPG, PNG</div>
+      <input type="file" id="inv-fi" multiple accept=".pdf,.jpg,.jpeg,.png">
+    </div>
+    <div class="file-chips" id="inv-chips"></div>
+    <div id="inv-progress" style="display:none"><div class="progress-wrap"><div class="spinner"></div><div class="progress-txt" id="inv-prog-txt">Analisando documentos...</div></div></div>
+    <div id="inv-btns">
+      <button class="btn btn-green" id="inv-btn-ai" disabled style="margin-bottom:10px"> Analisar e preencher investigação</button>
+      <button class="btn btn-ghost" id="inv-btn-manual">&#x270F;&#xFE0F; Preencher manualmente</button>
+    </div>
+  </div>
+  <div id="inv-pane-form" class="scroll" style="padding:16px;display:none">
+    <div id="inv-form-content"></div>
+    <button class="btn btn-green" id="inv-btn-relatorio" style="margin-bottom:10px"> Gerar Relatório ISO 45001</button>
+    <div style="height:24px"></div>
+  </div>
+  <div id="inv-pane-rel" class="scroll" style="padding:16px;display:none">
+    <div id="inv-rel-content"></div>
+    <button class="btn btn-green" id="inv-btn-pdf" style="margin-top:10px;margin-bottom:8px">&#x1F4E5; Exportar relatório PDF</button>
+    <button class="btn btn-outline" id="inv-btn-nova" style="margin-top:0px;margin-bottom:6px">&#x21A9; Nova investigação</button>
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+<!-- MODAL DOC SOC -->
+<div class="modal-bg" id="modal-doc">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:4px"> Documento para o SOC</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Copie e cole no campo "Informações Complementares" do SOC</p>
+    <div id="modal-doc-content" class="comp-text" style="margin-bottom:12px;max-height:300px"></div>
+    <button class="btn btn-green" id="modal-btn-copiar" style="margin-bottom:10px"> Copiar tudo</button>
+    <button class="btn btn-ghost" id="modal-btn-fechar">Fechar</button>
+  </div>
+</div>
+
+</div>
+<script>
+//  UTILS 
+function $(id){ return document.getElementById(id); }
+function on(id, ev, fn){ $(id).addEventListener(ev, fn); }
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('show'); });
+  $(id).classList.add('show');
+}
+function toast(msg){
+  var t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+function sv(id){ var el = $(id); return el ? el.value.trim() : ''; }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+//  NAVIGATION 
+on('btn-back-home','click',function(){ if(window.opener||window.parent!==window) window.history.back(); });
+on('btn-back-cat','click',function(){ showScreen('s-home'); });
+on('btn-back-catform','click',function(){ showScreen('s-cat'); });
+on('btn-back-inv','click',function(){ showScreen('s-home'); });
+on('btn-open-cat','click',function(){ showScreen('s-cat'); });
+on('btn-open-inv','click',function(){ renderInvForm({}); showScreen('s-inv'); });
+on('cat-btn-nova','click', catNovaAnalise);
+on('cat-btn-manual','click', catManual);
+on('cat-btn-cancelar','click',function(){ showScreen('s-cat'); });
+on('cat-btn-gerar-doc','click', catGerarDoc);
+on('inv-btn-manual','click',function(){ renderInvForm({}); invTab('form'); });
+on('inv-btn-relatorio','click', invGerarRelatorio);
+on('inv-btn-nova','click', invNovaInv);
+on('modal-btn-fechar','click',function(){ $('modal-doc').classList.remove('open'); });
+on('modal-btn-copiar','click', copiarDocSOC);
+on('cat-btn-ai','click', catAnalisar);
+on('inv-btn-ai','click', invAnalisar);
+
+//  FILES 
+var catFiles = [], invFiles = [];
+
+function setupDrop(dropId, fiId, arr, chipsId, btnId){
+  var drop = $(dropId), fi = $(fiId);
+  drop.addEventListener('click', function(){ fi.click(); });
+  fi.addEventListener('change', function(e){ addFiles(Array.from(e.target.files), arr, chipsId, btnId, dropId); });
+  drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('drag'); });
+  drop.addEventListener('dragleave', function(){ drop.classList.remove('drag'); });
+  drop.addEventListener('drop', function(e){ e.preventDefault(); drop.classList.remove('drag'); addFiles(Array.from(e.dataTransfer.files), arr, chipsId, btnId, dropId); });
+}
+function addFiles(newFiles, arr, chipsId, btnId, dropId){
+  newFiles.forEach(function(f){ if(!arr.find(function(x){ return x.name===f.name; })) arr.push(f); });
+  renderChips(arr, chipsId, btnId, dropId);
+}
+function renderChips(arr, chipsId, btnId, dropId){
+  var chips = $(chipsId); chips.innerHTML='';
+  arr.forEach(function(f,i){
+    var ext=f.name.split('.').pop().toLowerCase();
+    var ic=ext==='pdf'?'':['jpg','jpeg','png'].includes(ext)?'':'';
+    var d=document.createElement('div'); d.className='fchip';
+    var nm=f.name.length>22?f.name.substring(0,20)+'':f.name;
+    d.innerHTML=ic+' '+esc(nm)+'<button data-idx="'+i+'" data-chips="'+chipsId+'"></button>';
+    d.querySelector('button').addEventListener('click',function(e){
+      var idx=parseInt(e.target.getAttribute('data-idx'));
+      if(chipsId==='cat-chips'){ catFiles.splice(idx,1); renderChips(catFiles,'cat-chips','cat-btn-ai','cat-drop'); }
+      else { invFiles.splice(idx,1); renderChips(invFiles,'inv-chips','inv-btn-ai','inv-drop'); }
+    });
+    chips.appendChild(d);
+  });
+  $(btnId).disabled = arr.length===0;
+  $(dropId).classList.toggle('filled', arr.length>0);
+}
+function toB64(f){ return new Promise(function(res,rej){ var r=new FileReader(); r.onload=function(){ res(r.result.split(',')[1]); }; r.onerror=rej; r.readAsDataURL(f); }); }
+function mimeOf(f){ if(f.type) return f.type; var e=f.name.split('.').pop().toLowerCase(); return {pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png'}[e]||'application/octet-stream'; }
+
+setupDrop('cat-drop','cat-fi',catFiles,'cat-chips','cat-btn-ai');
+setupDrop('inv-drop','inv-fi',invFiles,'inv-chips','inv-btn-ai');
+
+//  AI 
+var MSGS_CAT = ['Lendo os documentos...','Identificando colaborador...','Analisando atestado e CID...','Cruzando espelho de ponto...','Preenchendo a CAT...','Verificando inconsistências...'];
+var MSGS_INV = ['Lendo os documentos...','Identificando o acidente...','Mapeando causas imediatas...','Analisando causas básicas...','Aplicando ISO 45001...','Montando plano de ação...','Gerando relatório...'];
+
+function startProgress(txtId, msgs){
+  var i=0; $(txtId).textContent=msgs[0];
+  return setInterval(function(){ i=(i+1)%msgs.length; $(txtId).textContent=msgs[i]; },1800);
+}
+
+async function callAI(files, prompt){
+  var parts=[];
+  for(var i=0;i<files.length;i++){
+    var f=files[i], m=mimeOf(f), b=await toB64(f);
+    if(m==='application/pdf') parts.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b}});
+    else if(m.startsWith('image/')) parts.push({type:'image',source:{type:'base64',media_type:m,data:b}});
+  }
+  parts.push({type:'text',text:prompt});
+  var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:parts}]})});
+  var d=await r.json();
+  if(d.error) throw new Error(d.error.message);
+  var raw=((d.content&&d.content.find(function(b){ return b.type==='text'; }))||{}).text||'';
+  raw=raw.replace(/```json|```/g,'').trim();
+  var m2=raw.match(/\{[\s\S]*\}/);
+  if(!m2) throw new Error('Resposta inválida da IA');
+  return JSON.parse(m2[0]);
+}
+
+//  CAT 
+var CAT_PROMPT='Voce e especialista SST da ZAMP S.A. Analise os documentos e extraia dados para CAT S-2210 eSocial. Responda APENAS com JSON minificado valido sem markdown e sem texto fora do JSON. Se nao encontrar um valor use string vazia. JSON exato: {"co":{"nome":"","cpf":"","cracha":"","cargo":"","admissao":"","unidade":"","cnpj":"13.574.594/0001-96"},"ac":{"data":"","hora":"","hora_ok":1,"tipo":"","ult_dia":"","h_antes":"","h_antes_ok":1,"situacao":"","agente":"","parte":"","lat":"","lat_ok":1},"lo":{"cep":"","log_t":"","log":"","num":"","bairro":"","cidade":"","uf":"","espec":""},"at":{"data":"","hora":"","local":"","afast":"","dias":"","prev":"","intern":"","nat":"","medico":"","crm":"","crm_uf":"","cid":"","desc":""},"ad":{"test":"","comp":""},"al":[{"t":"warn","c":"campo","m":"mensagem"}],"res":"resumo em 1 linha","nok":0,"nap":0,"nvz":0}';
+
+async function catAnalisar(){
+  $('cat-btns').style.display='none';
+  $('cat-progress').style.display='block';
+  var iv=startProgress('cat-prog-txt',MSGS_CAT);
+  try{
+    var data=await callAI(catFiles,CAT_PROMPT);
+    clearInterval(iv);
+    $('cat-progress').style.display='none'; $('cat-btns').style.display='block';
+    $('cat-tab-result').style.display='';
+    renderCatResult(data);
+    catTab('result');
+  }catch(e){
+    clearInterval(iv);
+    $('cat-progress').style.display='none'; $('cat-btns').style.display='block';
+    toast('Erro: '+e.message);
+  }
+}
+
+function catTab(t){
+  $('cat-tab-upload').classList.toggle('active',t==='upload');
+  $('cat-tab-result').classList.toggle('active',t==='result');
+  $('cat-pane-upload').style.display=t==='upload'?'':'none';
+  $('cat-pane-result').style.display=t==='result'?'':'none';
+}
+
+function catManual(){
+  renderCatFormManual({co:{},ac:{},lo:{},at:{},ad:{}});
+  showScreen('s-cat-form');
+}
+function catNovaAnalise(){
+  catFiles=[]; renderChips(catFiles,'cat-chips','cat-btn-ai','cat-drop');
+  $('cat-tab-result').style.display='none';
+  $('cat-result-content').innerHTML='';
+  catTab('upload');
+}
+
+// result row helpers
+function sbg(v,ok){ if(v===''||v==null) return '<span class="badge badge-err">Vazio</span>'; if(!ok) return '<span class="badge badge-warn">Apurar</span>'; return '<span class="badge badge-ok">OK</span>'; }
+function vcl(v,ok){ if(v===''||v==null) return 'frv-empty'; if(!ok) return 'frv-warn'; return 'frv-ok'; }
+function dval(v){ return (v!=null&&v!=='') ? esc(v) : 'Não identificado'; }
+function rrow(l,v,ok){ return '<div class="frr"><div class="frl">'+esc(l)+'</div><div class="frv '+vcl(v,ok)+'">'+dval(v)+'</div><div class="frs">'+sbg(v,ok)+'</div></div>'; }
+
+function renderCatResult(c){
+  _catDataAtual = c;
+  var co=c.co||{},a=c.ac||{},l=c.lo||{},at=c.at||{},ad=c.ad||{};
+  var als=(c.al||[]).filter(function(x){ return x.m; }).map(function(al){
+    var tp=al.t==='danger'?'err':(al.t==='warn'?'warn':'info');
+    return '<div class="alert alert-'+tp+'"><span>'+(al.t==='danger'?'':al.t==='warn'?'[Aviso]':'(i)')+'</span><div><strong>'+esc(al.c||'')+'</strong>'+(al.c?' -- ':'')+esc(al.m||'')+'</div></div>';
+  }).join('');
+  var html='';
+  html+='<div style="background:linear-gradient(135deg,var(--g700),var(--g800));border-radius:14px;padding:13px;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:9px"><div style="font-size:20px">[OK]</div><div><div style="font-size:13px;font-weight:700;margin-bottom:1px">'+esc(co.nome||'Análise concluída')+'</div><div style="font-size:11px;opacity:.75">'+esc(c.res||'')+'</div></div></div>';
+  html+='<div class="sum-grid"><div class="sum-card sum-ok"><div class="sum-n">'+(c.nok||0)+'</div><div class="sum-l">confirmados</div></div><div class="sum-card sum-warn"><div class="sum-n">'+(c.nap||0)+'</div><div class="sum-l">a apurar</div></div><div class="sum-card sum-err"><div class="sum-n">'+(c.nvz||0)+'</div><div class="sum-l">não encontrados</div></div></div>';
+  html+=als;
+  html+='<div class="sec-card"><div class="sec-head"><div class="sec-num">1</div><div class="sec-title">Dados iniciais</div></div>'+rrow('Fonte','eSocial',1)+rrow('Recibo eSocial','Deixar em branco',1)+rrow('Número CAT','Deixar em branco',1)+rrow('Desconsiderar','Não marcar',1)+'</div>';
+  html+='<div class="sec-card"><div class="sec-head"><div class="sec-num">2</div><div class="sec-title">Colaborador</div></div>'+rrow('Nome',co.nome,1)+rrow('CPF',co.cpf,1)+rrow('Crachá',co.cracha,1)+rrow('Cargo',co.cargo,1)+rrow('Admissão',co.admissao,1)+rrow('Unidade',co.unidade,1)+rrow('CNPJ',co.cnpj,1)+'</div>';
+  html+='<div class="sec-card"><div class="sec-head"><div class="sec-num">3</div><div class="sec-title">Acidente</div></div>'+rrow('Tipo de CAT','Inicial',1)+rrow('Tipo acidente',a.tipo,!!a.tipo)+rrow('Iniciativa','Empregador',1)+rrow('Data',a.data,!!a.data)+rrow('Hora',a.hora,a.hora_ok)+rrow('Último dia trab.',a.ult_dia,!!a.ult_dia)+rrow('Horas antes',a.h_antes,a.h_antes_ok)+rrow('Situação geradora',a.situacao,!!a.situacao)+rrow('Agente causador',a.agente,!!a.agente)+rrow('Parte atingida',a.parte,!!a.parte)+rrow('Lateralidade',a.lat,a.lat_ok)+'</div>';
+  html+='<div class="sec-card"><div class="sec-head"><div class="sec-num">4</div><div class="sec-title">Local</div></div>'+rrow('Tipo local','Estabelecimento empregador',1)+rrow('CNPJ',co.cnpj,1)+rrow('CEP',l.cep,!!l.cep)+rrow('Logradouro',l.log,!!l.log)+rrow('Número',l.num,!!l.num)+rrow('Bairro',l.bairro,!!l.bairro)+rrow('Cidade',l.cidade,!!l.cidade)+rrow('Estado',l.uf,!!l.uf)+rrow('Especificação',l.espec,!!l.espec)+'</div>';
+  html+='<div class="sec-card"><div class="sec-head"><div class="sec-num">5</div><div class="sec-title">Atestado médico</div></div>'+rrow('Data atendimento',at.data,!!at.data)+rrow('Hora atendimento',at.hora,!!at.hora)+rrow('Local',at.local,!!at.local)+rrow('Afastamento',at.afast,!!at.afast)+rrow('Dias',at.dias,!!at.dias)+rrow('Prevalente até',at.prev,!!at.prev)+rrow('Internação',at.intern,!!at.intern)+rrow('Natureza lesão',at.nat,!!at.nat)+rrow('CID',at.cid,!!at.cid)+rrow('Descrição',at.desc,!!at.desc)+rrow('Médico(a)',at.medico,!!at.medico)+rrow('CRM',at.crm,!!at.crm)+rrow('CRM UF',at.crm_uf,!!at.crm_uf)+'</div>';
+  html+='<div class="sec-card"><div class="sec-head"><div class="sec-num">6</div><div class="sec-title">Dados adicionais</div></div>'+rrow('Testemunha',ad.test||'Consultar gestor',!!ad.test)+'<div class="comp-box"><div class="comp-label">Informações complementares -- copiar para o SOC</div><div class="comp-text" id="cat-comp-txt">'+esc(ad.comp||'')+'</div><button class="btn-copy" id="cat-comp-btn"> Copiar</button></div></div>';
+  $('cat-result-content').innerHTML=html;
+  on('cat-comp-btn','click',function(){ navigator.clipboard.writeText($('cat-comp-txt').innerText).then(function(){ toast('Copiado!'); }); });
+  var bp=$('cat-btn-pdf'); if(bp){ bp.onclick=gerarPDFCAT; }
+}
+
+// CAT form manual
+var CAT_FIELDS=[
+  {sec:'1. Dados do Colaborador',fields:[{id:'co_nome',lb:'Nome completo'},{id:'co_cpf',lb:'CPF'},{id:'co_cracha',lb:'Crachá / Matrícula'},{id:'co_cargo',lb:'Cargo'},{id:'co_admissao',lb:'Data de admissão'},{id:'co_unidade',lb:'Unidade'}]},
+  {sec:'2. Acidente',fields:[{id:'ac_data',lb:'Data do acidente'},{id:'ac_hora',lb:'Hora do acidente'},{id:'ac_tipo',lb:'Tipo (Típico/Trajeto)'},{id:'ac_ult_dia',lb:'Último dia trabalhado'},{id:'ac_h_antes',lb:'Horas trabalhadas antes'},{id:'ac_situacao',lb:'Situação geradora',big:true},{id:'ac_agente',lb:'Agente causador'},{id:'ac_parte',lb:'Parte do corpo atingida'},{id:'ac_lat',lb:'Lateralidade'}]},
+  {sec:'3. Local do Acidente',fields:[{id:'lo_cep',lb:'CEP'},{id:'lo_log',lb:'Logradouro'},{id:'lo_num',lb:'Número'},{id:'lo_bairro',lb:'Bairro'},{id:'lo_cidade',lb:'Cidade'},{id:'lo_uf',lb:'Estado'},{id:'lo_espec',lb:'Especificação do local',big:true}]},
+  {sec:'4. Atestado Médico',fields:[{id:'at_data',lb:'Data atendimento'},{id:'at_hora',lb:'Hora atendimento'},{id:'at_local',lb:'Local atendimento'},{id:'at_cid',lb:'CID'},{id:'at_afast',lb:'Afastamento (Sim/Não)'},{id:'at_dias',lb:'Dias de afastamento'},{id:'at_prev',lb:'Prevalente até'},{id:'at_intern',lb:'Internação (Sim/Não)'},{id:'at_nat',lb:'Natureza da lesão'},{id:'at_desc',lb:'Descrição da lesão',big:true},{id:'at_medico',lb:'Nome do médico'},{id:'at_crm',lb:'CRM número'},{id:'at_crm_uf',lb:'CRM UF'}]},
+  {sec:'5. Dados Adicionais',fields:[{id:'ad_test',lb:'Testemunha'},{id:'ad_comp',lb:'Informações complementares',big:true}]}
+];
+
+function renderCatFormManual(d){
+  var html='';
+  var vals={co_nome:((d.co||{}).nome||''),co_cpf:((d.co||{}).cpf||''),co_cracha:((d.co||{}).cracha||''),co_cargo:((d.co||{}).cargo||''),co_admissao:((d.co||{}).admissao||''),co_unidade:((d.co||{}).unidade||''),ac_data:((d.ac||{}).data||''),ac_hora:((d.ac||{}).hora||''),ac_tipo:((d.ac||{}).tipo||''),ac_ult_dia:((d.ac||{}).ult_dia||''),ac_h_antes:((d.ac||{}).h_antes||''),ac_situacao:((d.ac||{}).situacao||''),ac_agente:((d.ac||{}).agente||''),ac_parte:((d.ac||{}).parte||''),ac_lat:((d.ac||{}).lat||''),lo_cep:((d.lo||{}).cep||''),lo_log:((d.lo||{}).log||''),lo_num:((d.lo||{}).num||''),lo_bairro:((d.lo||{}).bairro||''),lo_cidade:((d.lo||{}).cidade||''),lo_uf:((d.lo||{}).uf||''),lo_espec:((d.lo||{}).espec||''),at_data:((d.at||{}).data||''),at_hora:((d.at||{}).hora||''),at_local:((d.at||{}).local||''),at_cid:((d.at||{}).cid||''),at_afast:((d.at||{}).afast||''),at_dias:((d.at||{}).dias||''),at_prev:((d.at||{}).prev||''),at_intern:((d.at||{}).intern||''),at_nat:((d.at||{}).nat||''),at_desc:((d.at||{}).desc||''),at_medico:((d.at||{}).medico||''),at_crm:((d.at||{}).crm||''),at_crm_uf:((d.at||{}).crm_uf||''),ad_test:((d.ad||{}).test||''),ad_comp:((d.ad||{}).comp||'')};
+  CAT_FIELDS.forEach(function(s){
+    html+='<div class="inv-sec"><div class="inv-sec-head" onclick="toggleSec(this)"><div><div class="inv-sec-title">'+esc(s.sec)+'</div></div><svg class="chevron open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="inv-sec-body open">';
+    s.fields.forEach(function(f){
+      var v=esc(vals[f.id]||'');
+      html+='<div class="field"><label>'+esc(f.lb)+'</label>';
+      if(f.big) html+='<textarea id="'+f.id+'" rows="3">'+v+'</textarea>';
+      else html+='<input type="text" id="'+f.id+'" value="'+v+'">';
+      html+='</div>';
+    });
+    html+='</div></div>';
+  });
+  $('cat-form-content').innerHTML=html;
+}
+
+function catGerarDoc(){
+  var nm=sv('co_nome'),cargo=sv('co_cargo'),data=sv('ac_data'),local=sv('lo_espec'),agente=sv('ac_agente'),desc=sv('at_desc'),cid=sv('at_cid'),afast=sv('at_dias');
+  var comp=sv('ad_comp')||('Colaborador: '+nm+' ('+cargo+')\nData: '+data+'\nLocal: '+local+'\nAgente causador: '+agente+'\nLesão: '+desc+'\nCID: '+cid+'\nAfastamento: '+afast+' dias.');
+  $('modal-doc-content').textContent=comp;
+  $('modal-doc').classList.add('open');
+}
+function copiarDocSOC(){ navigator.clipboard.writeText($('modal-doc-content').innerText).then(function(){ toast('Copiado!'); }); }
+
+//  INV 
+var INV_PROMPT='Voce e especialista SST ISO 45001. Analise os documentos do acidente e preencha uma investigacao completa. Responda APENAS com JSON minificado valido sem markdown. Se nao encontrar use string vazia. JSON exato: {"ev":{"data":"","hora":"","local":"","desc":"","func":"","cargo":"","admissao":"","turno":""},"dn":{"lesao":"","parte":"","lat":"","cid":"","afast":"","dias":"","intern":""},"ci":["causa imediata"],"cb":{"pess":"","trab":"","gest":""},"p5":{"oque":"","quem":"","quando":"","onde":"","como":""},"plano":[{"oque":"","resp":"","prazo":""}],"class":"Acidente Tipico","grav":"Leve","evit":"Sim","nrs":["NR-01"],"recom":"","res":""}';
+
+async function invAnalisar(){
+  $('inv-btns').style.display='none';
+  $('inv-progress').style.display='block';
+  var iv=startProgress('inv-prog-txt',MSGS_INV);
+  try{
+    var data=await callAI(invFiles,INV_PROMPT);
+    clearInterval(iv);
+    $('inv-progress').style.display='none'; $('inv-btns').style.display='block';
+    $('inv-tab-rel').style.display='';
+    renderInvForm(data);
+    invTab('form');
+  }catch(e){
+    clearInterval(iv);
+    $('inv-progress').style.display='none'; $('inv-btns').style.display='block';
+    toast('Erro: '+e.message);
+  }
+}
+
+function invTab(t){
+  ['upload','form','rel'].forEach(function(n){
+    $('inv-tab-'+n).classList.toggle('active',n===t);
+    $('inv-pane-'+n).style.display=n===t?'':'none';
+  });
+}
+
+function toggleSec(el){
+  var b=el.nextElementSibling, c=el.querySelector('.chevron');
+  b.classList.toggle('open'); c.classList.toggle('open');
+}
+
+var invPlanoCount=0;
+function renderInvForm(d){
+  var ev=d.ev||{}, dn=d.dn||{}, cb=d.cb||{}, p5=d.p5||{};
+  var ci=Array.isArray(d.ci)?d.ci.join('\n'):'';
+  var pl=Array.isArray(d.plano)?d.plano:[];
+  invPlanoCount=pl.length;
+
+  function inp(id,val){return '<input type="text" id="'+id+'" value="'+esc(val||'')+'">';}
+  function ta(id,val,rows){return '<textarea id="'+id+'" rows="'+(rows||3)+'">'+esc(val||'')+'</textarea>';}
+  function fld(lb,el){return '<div class="field"><label>'+esc(lb)+'</label>'+el+'</div>';}
+  function frow(a,b){return '<div class="field-row">'+a+b+'</div>';}
+
+  var plHtml='';
+  pl.forEach(function(p2,i){
+    plHtml+='<div class="inv-acao" style="background:var(--bg);border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid var(--border)">';
+    plHtml+='<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px">AÇÃO '+(i+1)+'</div>';
+    plHtml+=fld('O que fazer',ta('pl_oque_'+i,p2.oque,2));
+    plHtml+=frow(fld('Responsável',inp('pl_resp_'+i,p2.resp)),fld('Prazo',inp('pl_prazo_'+i,p2.prazo)));
+    plHtml+='</div>';
+  });
+
+  var secs=[
+    {title:'1. Identificação do Evento',tag:'ISO 45001 -- Cláusula 6.1',body:
+      frow(fld('Data',inp('ev_data',ev.data)),fld('Hora',inp('ev_hora',ev.hora)))+
+      frow(fld('Local',inp('ev_local',ev.local)),fld('Turno',inp('ev_turno',ev.turno)))+
+      fld('Funcionário',inp('ev_func',ev.func))+
+      frow(fld('Cargo',inp('ev_cargo',ev.cargo)),fld('Admissão',inp('ev_adm',ev.admissao)))+
+      fld('Descrição do acidente',ta('ev_desc',ev.desc,4))
+    },
+    {title:'2. Classificação e Danos',tag:'ISO 45001 -- Cláusula 10.2',body:
+      frow(fld('Classificação',inp('dn_class',d.class)),fld('Gravidade',inp('dn_grav',d.grav)))+
+      frow(fld('Lesão sofrida',inp('dn_lesao',dn.lesao)),fld('CID',inp('dn_cid',dn.cid)))+
+      frow(fld('Parte do corpo',inp('dn_parte',dn.parte)),fld('Lateralidade',inp('dn_lat',dn.lat)))+
+      frow(fld('Afastamento',inp('dn_afast',dn.afast)),fld('Dias',inp('dn_dias',dn.dias)))+
+      frow(fld('Internação',inp('dn_intern',dn.intern)),fld('Evitável?',inp('dn_evit',d.evit)))
+    },
+    {title:'3. Causas Imediatas',tag:'Atos e condições inseguras',body:
+      fld('Atos e condições inseguras identificadas',ta('ci_txt',ci,4))
+    },
+    {title:'4. Causas Básicas',tag:'Fatores sistêmicos -- ISO 45001',body:
+      fld('Fator pessoal (conhecimento, habilidade, motivação)',ta('cb_pess',cb.pess,3))+
+      fld('Fator do trabalho (EPI, ferramenta, procedimento)',ta('cb_trab',cb.trab,3))+
+      fld('Fator de gestão (treinamento, supervisão, cultura)',ta('cb_gest',cb.gest,3))
+    },
+    {title:'5. Sequência do Evento (5W)',tag:'Metodologia de investigação',body:
+      fld('O QUE aconteceu?',ta('p5_oque',p5.oque,2))+
+      fld('QUEM estava envolvido?',inp('p5_quem',p5.quem))+
+      frow(fld('QUANDO?',inp('p5_quando',p5.quando)),fld('ONDE?',inp('p5_onde',p5.onde)))+
+      fld('COMO ocorreu?',ta('p5_como',p5.como,3))
+    },
+    {title:'6. Plano de Ação Corretiva',tag:'ISO 45001 -- Cláusula 10.2.1',body:
+      plHtml+'<button class="btn btn-ghost" id="inv-add-acao" style="font-size:12px;padding:10px;margin-top:2px">+ Adicionar ação</button>'
+    },
+    {title:'7. NRs e Recomendações',tag:'Legislação brasileira aplicável',body:
+      fld('NRs aplicáveis',inp('nr_aplic',(d.nrs||[]).join(', ')))+
+      fld('Recomendações gerais',ta('inv_recom',d.recom,4))
+    }
+  ];
+
+  var html='';
+  secs.forEach(function(s){
+    html+='<div class="inv-sec"><div class="inv-sec-head" onclick="toggleSec(this)"><div style="flex:1"><div class="inv-sec-title">'+esc(s.title)+'</div><div class="iso-tag">'+esc(s.tag)+'</div></div><svg class="chevron open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="inv-sec-body open">'+s.body+'</div></div>';
+  });
+  $('inv-form-content').innerHTML=html;
+
+  $('inv-add-acao').addEventListener('click',function(){
+    invPlanoCount++;
+    var container=$('inv-form-content');
+    var secs2=container.querySelectorAll('.inv-sec');
+    var sec6=secs2[5];
+    var body=sec6.querySelector('.inv-sec-body');
+    var addBtn=body.querySelector('#inv-add-acao');
+    var div=document.createElement('div');
+    div.className='inv-acao';
+    div.style.cssText='background:var(--bg);border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid var(--border)';
+    div.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px">AÇÃO EXTRA '+invPlanoCount+'</div><div class="field"><label>O que fazer</label><textarea rows="2"></textarea></div><div class="field-row"><div class="field"><label>Responsável</label><input type="text"></div><div class="field"><label>Prazo</label><input type="text"></div></div>';
+    body.insertBefore(div,addBtn);
+  });
+}
+
+function invGerarRelatorio(){
+  $('inv-tab-rel').style.display='';
+  renderRelatorio();
+  invTab('rel');
+}
+
+function renderRelatorio(){
+  var func=sv('ev_func'),cargo=sv('ev_cargo'),data=sv('ev_data'),hora=sv('ev_hora'),local=sv('ev_local'),desc=sv('ev_desc');
+  var classe=sv('dn_class'),grav=sv('dn_grav'),lesao=sv('dn_lesao'),cid=sv('dn_cid'),afast=sv('dn_afast'),dias=sv('dn_dias'),evit=sv('dn_evit');
+  var ci=sv('ci_txt'),cpess=sv('cb_pess'),ctrab=sv('cb_trab'),cgest=sv('cb_gest');
+  var oque=sv('p5_oque'),quem=sv('p5_quem'),quando=sv('p5_quando'),onde=sv('p5_onde'),como=sv('p5_como');
+  var nrs=sv('nr_aplic'),recom=sv('inv_recom');
+  var gravColor={'Leve':'var(--g700)','Moderado':'var(--yellow)','Grave':'var(--red)','Fatal':'#000'}[grav]||'var(--muted)';
+
+  var html='';
+  html+='<div style="background:linear-gradient(135deg,var(--g800),var(--g900));border-radius:16px;padding:15px;color:#fff;margin-bottom:12px">';
+  html+='<div style="font-size:10px;font-weight:700;opacity:.6;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px">ZAMP S.A. -- GERÊNCIA SST</div>';
+  html+='<div style="font-size:16px;font-weight:800;margin-bottom:2px">Relatório de Investigação</div>';
+  html+='<div style="font-size:11px;opacity:.65;margin-bottom:9px">ISO 45001:2018 -- Cláusula 10.2</div>';
+  html+='<div style="display:flex;gap:7px;flex-wrap:wrap">';
+  html+='<span class="badge" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2)"> '+esc(data)+'</span>';
+  html+='<span class="badge" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2)"> '+esc(func)+'</span>';
+  html+='<span class="badge" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2)">[Aviso] '+esc(grav)+'</span>';
+  html+='</div></div>';
+
+  html+='<div class="sec-card"><div class="sec-head"><div class="sec-num">1</div><div class="sec-title">Identificação</div></div>';
+  html+=rrow('Funcionário',func,1)+rrow('Cargo',cargo,1)+rrow('Data / Hora',data+' '+hora,!!(data||hora));
+  html+=rrow('Local',local,!!local)+'<div class="frr"><div class="frl">Gravidade</div><div class="frv" style="color:'+gravColor+';font-weight:700">'+esc(grav)+'</div><div class="frs">'+(grav?'<span class="badge badge-ok">OK</span>':'<span class="badge badge-err">Vazio</span>')+'</div></div>';
+  html+=rrow('Classificação',classe,!!classe)+rrow('Evitável',evit,!!evit)+'</div>';
+
+  html+='<div class="sec-card"><div class="sec-head"><div class="sec-num">2</div><div class="sec-title">Danos e lesões</div></div>'+rrow('Lesão',lesao,!!lesao)+rrow('CID',cid,!!cid)+rrow('Afastamento',afast,!!afast)+rrow('Dias',dias,!!dias)+'</div>';
+
+  html+='<div class="sec-card"><div class="sec-head"><div class="sec-num">3</div><div class="sec-title">Sequência 5W</div></div>'+rrow('O que',oque,!!oque)+rrow('Quem',quem,!!quem)+rrow('Quando',quando,!!quando)+rrow('Onde',onde,!!onde)+rrow('Como',como,!!como)+'</div>';
+
+  html+='<div class="sec-card"><div class="sec-head"><div class="sec-num">4</div><div class="sec-title">Análise de causas</div></div>';
+  html+='<div style="padding:10px 12px;border-bottom:1px solid var(--border)"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Causas imediatas</div><div style="font-size:12px;white-space:pre-wrap">'+esc(ci)+'</div></div>';
+  html+='<div style="padding:10px 12px;border-bottom:1px solid var(--border)"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Fator pessoal</div><div style="font-size:12px">'+esc(cpess)+'</div></div>';
+  html+='<div style="padding:10px 12px;border-bottom:1px solid var(--border)"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Fator do trabalho</div><div style="font-size:12px">'+esc(ctrab)+'</div></div>';
+  html+='<div style="padding:10px 12px"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Fator de gestão</div><div style="font-size:12px">'+esc(cgest)+'</div></div></div>';
+
+  html+='<div class="sec-card"><div class="sec-head"><div class="sec-num">5</div><div class="sec-title">NRs e Recomendações</div></div>';
+  html+='<div style="padding:10px 12px;border-bottom:1px solid var(--border)"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">NRs</div><div style="font-size:12px">'+esc(nrs)+'</div></div>';
+  html+='<div style="padding:10px 12px"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Recomendações</div><div style="font-size:12px;white-space:pre-wrap">'+esc(recom)+'</div></div></div>';
+
+  // BASE CAT
+  var baseComp='Colaborador: '+func+' ('+cargo+')\nData: '+data+' -- '+hora+'\nLocal: '+local+'\nDescrição: '+desc+'\nClassificação: '+classe+' -- '+grav+'\nLesão: '+lesao+' | CID: '+cid+'\nAfastamento: '+afast+' ('+dias+' dias)\nCausas imediatas: '+ci+'\nNRs: '+nrs;
+  html+='<div style="background:var(--red-bg);border:1px solid var(--red-bord);border-radius:14px;padding:13px;margin-top:6px">';
+  html+='<div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:7px"> Base para preenchimento da CAT</div>';
+  html+='<div class="comp-text" id="inv-comp-txt">'+esc(baseComp)+'</div>';
+  html+='<button class="btn-copy" id="inv-comp-btn"> Copiar para CAT</button>';
+  html+='</div>';
+
+  html+='<div style="text-align:center;padding:14px 0;font-size:10px;color:var(--muted)">Relatório gerado em '+new Date().toLocaleDateString('pt-BR')+' -- SegTrab DT 22:8 · ZAMP S.A.</div>';
+
+  $('inv-rel-content').innerHTML=html;
+  $('inv-comp-btn').addEventListener('click',function(){ navigator.clipboard.writeText($('inv-comp-txt').innerText).then(function(){ toast('Copiado para CAT!'); }); });
+  var bip=$('inv-btn-pdf'); if(bip){ bip.onclick=gerarPDFInvestigacao; }
+}
+
+function invNovaInv(){
+  invFiles=[]; renderChips(invFiles,'inv-chips','inv-btn-ai','inv-drop');
+  $('inv-tab-rel').style.display='none';
+  $('inv-form-content').innerHTML='';
+  $('inv-rel-content').innerHTML='';
+  invTab('upload');
+}
+
+window.openSSTAcidentes=function(){ showScreen('s-home'); };
+
+//  PDF EXPORT 
+function abrirPDF(htmlContent){
+  var blob = new Blob([htmlContent], {type:'text/html'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url;
+  a.target = '_blank';
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+}
+
+function gerarPDFCAT(){
+  if(!_catDataAtual){ toast('Nenhuma analise disponivel'); return; }
+  var c=_catDataAtual, co=c.co||{}, a=c.ac||{}, l=c.lo||{}, at=c.at||{}, ad=c.ad||{};
+  function linha(label, valor){
+    var cor = (valor&&valor!==''&&valor!=='Nao identificado') ? '#1C1C1C' : '#B42318';
+    var obs  = (valor&&valor!==''&&valor!=='Nao identificado') ? '' : ' <span style="font-size:10px;color:#B42318;font-weight:700;">[PREENCHER]</span>';
+    return '<tr><td style="padding:6px 10px;font-size:11px;color:#6B7280;border:1px solid #E8ECE9;background:#F7F8FA;width:170px;font-weight:600;">'+label+'</td><td style="padding:6px 10px;font-size:11px;color:'+cor+';border:1px solid #E8ECE9;font-weight:500;">'+( valor||'')+''+obs+'</td></tr>';
+  }
+  function secao(num, titulo){
+    return '<tr><td colspan="2" style="padding:8px 10px;background:#0E5E2D;color:#fff;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;">'+num+'. '+titulo+'</td></tr>';
+  }
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Rascunho CAT -- '+esc(co.nome||'')+'</title><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#fff;color:#1C1C1C}table{width:100%;border-collapse:collapse}@media print{body{padding:0}}</style></head><body>';
+  html += '<div style="border:2px solid #0E5E2D;border-radius:4px;overflow:hidden;margin-bottom:20px;">';
+  html += '<div style="background:#0E5E2D;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;">';
+  html += '<div><div style="font-size:16px;font-weight:800;color:#fff;">RASCUNHO -- CAT</div>';
+  html += '<div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px;">Comunicacao de Acidente de Trabalho -- S-2210 eSocial</div></div>';
+  html += '<div style="text-align:right"><div style="font-size:10px;color:rgba(255,255,255,.6);">ZAMP S.A. -- Gerencia SST</div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,.6);">Gerado em: '+new Date().toLocaleDateString('pt-BR')+'</div></div></div>';
+  html += '<table>';
+  html += secao('1','Dados Iniciais');
+  html += linha('Fonte de cadastramento','eSocial');
+  html += linha('Recibo eSocial','Deixar em branco');
+  html += linha('Numero CAT','Deixar em branco');
+  html += linha('Desconsiderar','Nao marcar');
+  html += secao('2','Colaborador');
+  html += linha('Nome completo', co.nome);
+  html += linha('CPF', co.cpf);
+  html += linha('Cracha / Matricula', co.cracha);
+  html += linha('Cargo', co.cargo);
+  html += linha('Data de admissao', co.admissao);
+  html += linha('Unidade', co.unidade);
+  html += linha('CNPJ', co.cnpj||'13.574.594/0001-96');
+  html += secao('3','CAT -- Acidente');
+  html += linha('Tipo de CAT','Inicial');
+  html += linha('Tipo de acidente', a.tipo);
+  html += linha('Iniciativa','Empregador');
+  html += linha('Data do acidente', a.data);
+  html += linha('Hora do acidente', a.hora_ok ? a.hora : (a.hora ? a.hora+' (confirmar)' : ''));
+  html += linha('Ultimo dia trabalhado', a.ult_dia);
+  html += linha('Horas trabalhadas antes', a.h_antes_ok ? a.h_antes : (a.h_antes ? a.h_antes+' (confirmar)' : ''));
+  html += linha('Situacao geradora', a.situacao);
+  html += linha('Agente causador', a.agente);
+  html += linha('Parte do corpo atingida', a.parte);
+  html += linha('Lateralidade', a.lat_ok ? a.lat : (a.lat ? a.lat+' (confirmar)' : ''));
+  html += secao('4','Local do Acidente');
+  html += linha('Tipo de local','Estabelecimento do empregador');
+  html += linha('Tipo de inscricao','CNPJ');
+  html += linha('CNPJ', co.cnpj||'13.574.594/0001-96');
+  html += linha('CEP', l.cep);
+  html += linha('Tipo de logradouro', l.log_t);
+  html += linha('Logradouro', l.log);
+  html += linha('Numero', l.num);
+  html += linha('Bairro', l.bairro);
+  html += linha('Cidade', l.cidade);
+  html += linha('Estado', l.uf);
+  html += linha('Especificacao do local', l.espec);
+  html += secao('5','Atestado Medico');
+  html += linha('Data do atendimento', at.data);
+  html += linha('Hora do atendimento', at.hora);
+  html += linha('Local do atendimento', at.local);
+  html += linha('Houve afastamento', at.afast);
+  html += linha('Dias de afastamento', at.dias);
+  html += linha('Prevalente ate', at.prev);
+  html += linha('Internacao', at.intern);
+  html += linha('Natureza da lesao', at.nat);
+  html += linha('CID', at.cid);
+  html += linha('Descricao da lesao', at.desc);
+  html += linha('Medico(a)', at.medico);
+  html += linha('Conselho de classe','CRM');
+  html += linha('CRM -- numero', at.crm);
+  html += linha('CRM -- UF', at.crm_uf);
+  html += secao('6','Dados Adicionais');
+  html += linha('Testemunha', ad.test);
+  html += '</table>';
+  // Informacoes complementares
+  html += '<div style="margin-top:0;border:1px solid #E8ECE9;border-top:none;">';
+  html += '<div style="padding:7px 10px;background:#ECFDF3;border-bottom:1px solid #E8ECE9;"><span style="font-size:11px;font-weight:800;color:#0E5E2D;text-transform:uppercase;letter-spacing:.05em;">Informacoes Complementares -- copiar para o SOC</span></div>';
+  html += '<div style="padding:10px;font-size:11px;line-height:1.7;white-space:pre-wrap;color:#1C1C1C;">'+esc(ad.comp||'')+'</div>';
+  html += '</div></div>';
+  // Alertas
+  if(c.al&&c.al.filter(function(x){return x.m;}).length>0){
+    html += '<div style="margin-top:16px;border:1px solid #F0C070;border-radius:4px;overflow:hidden;">';
+    html += '<div style="padding:8px 10px;background:#FFF8E6;border-bottom:1px solid #F0C070;font-size:11px;font-weight:800;color:#B7791F;text-transform:uppercase;">Pontos de Atencao para o Preenchimento</div>';
+    c.al.filter(function(x){return x.m;}).forEach(function(al){
+      html += '<div style="padding:7px 10px;border-bottom:1px solid #F0C070;font-size:11px;color:#B7791F;"><strong>'+esc(al.c||'')+'</strong>'+(al.c?' -- ':'')+esc(al.m||'')+'</div>';
+    });
+    html += '</div>';
+  }
+  html += '<div style="margin-top:20px;text-align:center;font-size:10px;color:#9CA3AF;">Rascunho gerado pelo SegTrab DT 22:8 -- ZAMP S.A. -- Para uso interno</div>';
+  html += '<script>window.onload=function(){window.print();}<\/script>';
+  html += '</body></html>';
+  abrirPDF(html);
+}
+
+function gerarPDFInvestigacao(){
+  var func=sv('ev_func'),cargo=sv('ev_cargo'),data=sv('ev_data'),hora=sv('ev_hora'),local=sv('ev_local'),desc=sv('ev_desc');
+  var classe=sv('dn_class'),grav=sv('dn_grav'),lesao=sv('dn_lesao'),cid=sv('dn_cid'),afast=sv('dn_afast'),dias=sv('dn_dias'),evit=sv('dn_evit'),intern=sv('dn_intern');
+  var ci=sv('ci_txt'),cpess=sv('cb_pess'),ctrab=sv('cb_trab'),cgest=sv('cb_gest');
+  var oque=sv('p5_oque'),quem=sv('p5_quem'),quando=sv('p5_quando'),onde=sv('p5_onde'),como=sv('p5_como');
+  var nrs=sv('nr_aplic'),recom=sv('inv_recom');
+  var gravColor={'Leve':'#157A3A','Moderado':'#B7791F','Grave':'#B42318','Fatal':'#000'}[grav]||'#1C1C1C';
+
+  function bloco(titulo, cor, conteudo){
+    return '<div style="margin-bottom:12px;border:1px solid #E8ECE9;border-radius:4px;overflow:hidden;"><div style="padding:8px 10px;background:'+cor+';"><span style="font-size:11px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.05em;">'+titulo+'</span></div>'+conteudo+'</div>';
+  }
+  function par(label, valor, destaque){
+    var cor = destaque ? destaque : '#1C1C1C';
+    return '<div style="display:flex;padding:6px 10px;border-bottom:1px solid #F7F8FA;"><span style="font-size:11px;color:#6B7280;width:160px;flex-shrink:0;font-weight:600;">'+label+'</span><span style="font-size:11px;color:'+cor+';font-weight:500;flex:1;">'+esc(valor||'')+'</span></div>';
+  }
+  function area(label, valor){
+    return '<div style="padding:8px 10px;border-bottom:1px solid #E8ECE9;"><div style="font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;margin-bottom:4px;">'+label+'</div><div style="font-size:11px;color:#1C1C1C;line-height:1.6;white-space:pre-wrap;">'+esc(valor||'')+'</div></div>';
+  }
+
+  var html='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Investigacao de Acidente -- '+esc(func)+'</title><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#fff}@media print{body{padding:0}}</style></head><body>';
+
+  // Cabecalho
+  html+='<div style="background:#0A3D1F;padding:16px;margin-bottom:16px;border-radius:4px;">';
+  html+='<div style="font-size:10px;color:rgba(255,255,255,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;">ZAMP S.A. -- Gerencia SST</div>';
+  html+='<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:2px;">Relatorio de Investigacao de Acidente</div>';
+  html+='<div style="font-size:11px;color:rgba(255,255,255,.65);">ISO 45001:2018 -- Clausula 10.2 | Gerado em: '+new Date().toLocaleDateString('pt-BR')+'</div>';
+  html+='<div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">';
+  html+='<span style="background:rgba(255,255,255,.15);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">'+esc(data)+'</span>';
+  html+='<span style="background:rgba(255,255,255,.15);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">'+esc(func)+'</span>';
+  html+='<span style="background:'+gravColor+';color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">'+esc(grav)+'</span>';
+  html+='</div></div>';
+
+  // Secoes
+  html+=bloco('1. Identificacao do Evento','#157A3A',
+    par('Funcionario',func)+par('Cargo',cargo)+par('Data / Hora',data+' '+hora)+par('Local',local)+par('Turno',sv('ev_turno'))+
+    '<div style="padding:8px 10px;font-size:11px;line-height:1.6;"><strong>Descricao:</strong> '+esc(desc)+'</div>'
+  );
+  html+=bloco('2. Classificacao e Danos','#B42318',
+    par('Classificacao',classe)+par('Gravidade',grav,gravColor)+par('Evitavel',evit)+
+    par('Lesao sofrida',lesao)+par('CID',cid)+par('Afastamento',afast)+par('Dias',dias)+par('Internacao',intern)
+  );
+  html+=bloco('3. Sequencia do Evento (5W)','#1565C0',
+    par('O que',oque)+par('Quem',quem)+par('Quando',quando)+par('Onde',onde)+
+    '<div style="padding:8px 10px;font-size:11px;line-height:1.6;"><strong>Como:</strong> '+esc(como)+'</div>'
+  );
+  html+=bloco('4. Analise de Causas','#0E5E2D',
+    area('Causas Imediatas (atos e condicoes inseguras)',ci)+
+    area('Fator Pessoal',cpess)+area('Fator do Trabalho',ctrab)+area('Fator de Gestao',cgest)
+  );
+  html+=bloco('5. NRs e Recomendacoes','#6B7280',
+    par('NRs aplicaveis',nrs)+area('Recomendacoes gerais',recom)
+  );
+
+  // Base para CAT
+  var baseComp='Colaborador: '+func+' ('+cargo+')\nData: '+data+' -- '+hora+'\nLocal: '+local+'\nDescricao: '+desc+'\nClassificacao: '+classe+' -- '+grav+'\nLesao: '+lesao+' | CID: '+cid+'\nAfastamento: '+afast+' ('+dias+' dias)\nCausas imediatas: '+ci+'\nNRs: '+nrs;
+  html+='<div style="margin-top:12px;border:2px solid #B42318;border-radius:4px;overflow:hidden;">';
+  html+='<div style="padding:8px 10px;background:#FDECEC;border-bottom:1px solid #B42318;font-size:11px;font-weight:800;color:#B42318;text-transform:uppercase;">Base para preenchimento da CAT -- copiar para o SOC</div>';
+  html+='<div style="padding:10px;font-size:11px;line-height:1.7;white-space:pre-wrap;color:#1C1C1C;">'+esc(baseComp)+'</div>';
+  html+='</div>';
+
+  html+='<div style="margin-top:16px;text-align:center;font-size:10px;color:#9CA3AF;">Relatorio gerado pelo SegTrab DT 22:8 -- ZAMP S.A. -- Para uso interno</div>';
+  html+='<script>window.onload=function(){window.print();}<\/script>';
+  html+='</body></html>';
+  abrirPDF(html);
+}
+
+// Registrar botoes PDF apos DOM pronto
+var _catDataAtual = null;
+document.addEventListener('DOMContentLoaded', function(){
+  var btnCatPdf = $('cat-btn-pdf');
+  if(btnCatPdf) btnCatPdf.addEventListener('click', gerarPDFCAT);
+  var btnInvPdf = $('inv-btn-pdf');
+  if(btnInvPdf) btnInvPdf.addEventListener('click', gerarPDFInvestigacao);
+});
+</script>
+</body>
+</html>
